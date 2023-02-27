@@ -36,30 +36,10 @@ jobs:
         id: get_diff
         working-directory: ./App1
         run: echo "changed=$(git diff origin/${{ github.base_ref }} HEAD --relative package.json | grep "^+.\+version" | wc -l)" >> $GITHUB_OUTPUT
-  version_diff_app2:
-    if: |
-      contains(github.event.pull_request.labels.*.name, 'release:patch') ||
-      contains(github.event.pull_request.labels.*.name, 'release:minor') ||
-      contains(github.event.pull_request.labels.*.name, 'release:major')
+  update_version_app1:
     runs-on: ubuntu-latest
-    outputs:
-      chagned: ${{ steps.get_diff.outputs.changed }}
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Get branch to marge
-        run: git fetch origin ${{ github.base_ref }} --depth=1
-
-      - name: Keep version changes
-        id: get_diff
-        working-directory: ./App2
-        run: echo "changed=$(git diff origin/${{ github.base_ref }} HEAD --relative package.json | grep "^+.\+version" | wc -l)" >> $GITHUB_OUTPUT
-  update_version:
-    runs-on: ubuntu-latest
-    needs: [version_diff_app1, version_diff_app2]
-    if: |
-      needs.version_diff_app1.outputs.chagned == '0' ||
-      needs.version_diff_app2.outputs.chagned == '0'
+    needs: [version_diff_app1]
+    if: needs.version_diff_app1.outputs.chagned == '0'
     steps:
       - uses: actions/checkout@v3
         with:
@@ -97,6 +77,56 @@ jobs:
         working-directory: ./App1
         run: pnpm version major --no-git-tag-version
 
+      - name: Commit and push to PR
+        working-directory: ./App1
+        run: |
+          git add .
+          git commit -m "v$(grep version package.json | awk -F \" '{print $4}')"
+          git push origin HEAD
+  version_diff_app2:
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'release:patch') ||
+      contains(github.event.pull_request.labels.*.name, 'release:minor') ||
+      contains(github.event.pull_request.labels.*.name, 'release:major')
+    runs-on: ubuntu-latest
+    outputs:
+      chagned: ${{ steps.get_diff.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Get branch to marge
+        run: git fetch origin ${{ github.base_ref }} --depth=1
+
+      - name: Keep version changes
+        id: get_diff
+        working-directory: ./App2
+        run: echo "changed=$(git diff origin/${{ github.base_ref }} HEAD --relative package.json | grep "^+.\+version" | wc -l)" >> $GITHUB_OUTPUT
+  update_version_app2:
+    runs-on: ubuntu-latest
+    needs: [version_diff_app2]
+    if: needs.version_diff_app2.outputs.chagned == '0'
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 7.1.0
+
+      - name: Set git information
+        if: steps.diff.outputs.changed == '0'
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git remote set-url origin https://github-actions:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Update version App2(patch)
         if: contains(github.event.pull_request.labels.*.name, 'release:patch')
         working-directory: ./App2
@@ -113,7 +143,7 @@ jobs:
         run: pnpm version major --no-git-tag-version
 
       - name: Commit and push to PR
-        working-directory: ./App1
+        working-directory: ./App2
         run: |
           git add .
           git commit -m "v$(grep version package.json | awk -F \" '{print $4}')"
