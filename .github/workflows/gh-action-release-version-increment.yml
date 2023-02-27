@@ -80,6 +80,7 @@ jobs:
       - name: Commit and push to PR
         working-directory: ./App1
         run: |
+          git pull origin HEAD
           git add .
           git commit -m "v$(grep version package.json | awk -F \" '{print $4}')"
           git push origin HEAD
@@ -145,6 +146,7 @@ jobs:
       - name: Commit and push to PR
         working-directory: ./App2
         run: |
+          git pull origin HEAD
           git add .
           git commit -m "v$(grep version package.json | awk -F \" '{print $4}')"
           git push origin HEAD
