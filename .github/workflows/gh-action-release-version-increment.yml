@@ -1,4 +1,4 @@
-name: update release version in package.json
+name: Update release version in package.json
 on:
  pull_request:
    branches:
@@ -10,7 +10,7 @@ jobs:
   check_release_label:
     runs-on: ubuntu-latest
     steps:
-      - name: check release label
+      - name: Check release label
         if: |
           !contains(github.event.pull_request.labels.*.name, 'release:patch') &&
           !contains(github.event.pull_request.labels.*.name, 'release:minor') &&
@@ -29,10 +29,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: マージ先を取得
+      - name: Get branch to marge
         run: git fetch origin ${{ github.base_ref }} --depth=1
 
-      - name: パージョンの変更を保持する
+      - name: Keep version changes
         id: get_diff
         run: echo "changed=$(git diff origin/${{ github.base_ref }} HEAD --relative "./package.json" | grep "^+.\+version" | wc -l)" >> $GITHUB_OUTPUT
   update_version:
@@ -52,7 +52,7 @@ jobs:
         with:
           version: 7.1.0
 
-      - name: Gitの設定
+      - name: Set git information
         if: steps.diff.outputs.changed == '0'
         run: |
           git config --global user.name 'github-actions[bot]'
@@ -61,19 +61,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: バージョンの更新(patch)
+      - name: Update version(patch)
         if: contains(github.event.pull_request.labels.*.name, 'release:patch')
         run: pnpm version patch --no-git-tag-version
 
-      - name: バージョンの更新(minor)
+      - name: Update version(minor)
         if: contains(github.event.pull_request.labels.*.name, 'release:minor')
         run: pnpm version minor --no-git-tag-version
 
-      - name: バージョンの更新(major)
+      - name: Update version(major)
         if: contains(github.event.pull_request.labels.*.name, 'release:major')
         run: pnpm version major --no-git-tag-version
 
-      - name: 変更を PR にプッシュする
+      - name: Commit and push to PR
         run: |
           git add .
           git commit -m "v$(grep version package.json | awk -F \" '{print $4}')"
