@@ -34,7 +34,7 @@ jobs:
 
       - name: Keep version changes
         id: get_diff
-        run: echo "changed=$(git diff origin/${{ github.base_ref }} HEAD --relative "./package.json" | grep "^+.\+version" | wc -l)" >> $GITHUB_OUTPUT
+        run: echo "changed=$(git diff origin/${{ github.base_ref }} HEAD --relative "./App1/package.json" | grep "^+.\+version" | wc -l)" >> $GITHUB_OUTPUT
   update_version:
     runs-on: ubuntu-latest
     needs: [version_diff]
@@ -63,17 +63,21 @@ jobs:
 
       - name: Update version(patch)
         if: contains(github.event.pull_request.labels.*.name, 'release:patch')
+        working-directory: ./App1
         run: pnpm version patch --no-git-tag-version
 
       - name: Update version(minor)
         if: contains(github.event.pull_request.labels.*.name, 'release:minor')
+        working-directory: ./App1
         run: pnpm version minor --no-git-tag-version
 
       - name: Update version(major)
         if: contains(github.event.pull_request.labels.*.name, 'release:major')
+        working-directory: ./App1
         run: pnpm version major --no-git-tag-version
 
       - name: Commit and push to PR
+        working-directory: ./App1
         run: |
           git add .
           git commit -m "v$(grep version package.json | awk -F \" '{print $4}')"
