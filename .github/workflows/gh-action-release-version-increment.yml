@@ -16,7 +16,7 @@ jobs:
           !contains(github.event.pull_request.labels.*.name, 'release:minor') &&
           !contains(github.event.pull_request.labels.*.name, 'release:major')
         run: |
-          echo "::error::リリースラベルを付与してください。labels: `release:patch`, `release:minor`, `release:major`"
+          echo "::error::リリースラベルを付与してください。labels: release:patch, release:minor, release:major"
           exit 1
   version_diff:
     if: |
