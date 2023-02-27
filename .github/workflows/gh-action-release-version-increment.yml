@@ -1,4 +1,4 @@
-name: package.json のバージョンをインクリメントする
+name: update release version in package.json
 on:
  pull_request:
    branches:
@@ -10,7 +10,7 @@ jobs:
   check_release_label:
     runs-on: ubuntu-latest
     steps:
-      - name: ラベルの存在チェック
+      - name: check release label
         if: |
           !contains(github.event.pull_request.labels.*.name, 'release:patch') &&
           !contains(github.event.pull_request.labels.*.name, 'release:minor') &&
