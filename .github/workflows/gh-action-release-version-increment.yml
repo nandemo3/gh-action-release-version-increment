@@ -113,6 +113,7 @@ jobs:
         run: pnpm version major --no-git-tag-version
 
       - name: Commit and push to PR
+        working-directory: ./
         run: |
           git add .
           git commit -m "App1 v$(grep version ""./App1/package.json" | awk -F \" '{print $4}'), App2 v$(grep version ""./App2/package.json" | awk -F \" '{print $4}')"
