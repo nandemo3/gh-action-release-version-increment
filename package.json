@@ -1,5 +1,5 @@
 {
-  "name": "gh-action-release-version-increment",
+  "name": "gh-action-release-ver-increment",
   "version": "2.0.0",
   "description": "",
   "main": "index.js",
