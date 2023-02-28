@@ -5,19 +5,7 @@ on:
      - main
    types:
      - labeled
-     - unlabeled
 jobs:
-  check_release_label:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check release label
-        if: |
-          !contains(github.event.pull_request.labels.*.name, 'release:patch') &&
-          !contains(github.event.pull_request.labels.*.name, 'release:minor') &&
-          !contains(github.event.pull_request.labels.*.name, 'release:major')
-        run: |
-          echo "::error::リリースラベルを付与してください。labels: release:patch, release:minor, release:major"
-          exit 1
   version_diff_app1:
     if: |
       contains(github.event.pull_request.labels.*.name, 'release:patch') ||
